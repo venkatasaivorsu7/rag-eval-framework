@@ -1,0 +1,57 @@
+[
+  {
+    "question": "How do I find users who haven't signed in for over 45 days?",
+    "retrieved_doc_ids": ["automation-get-inactive-users", "security-ca-baseline", "infra-dr-runbook"],
+    "relevant_doc_ids": ["automation-get-inactive-users"],
+    "retrieved_contexts": [
+      "Get-InactiveUsers.ps1 pulls the last sign-in timestamp for every enabled, licensed user via Microsoft Graph and flags accounts inactive beyond a configurable threshold, exporting a CSV report.",
+      "The Conditional Access baseline phases every new policy through report-only mode before enforcement.",
+      "The disaster recovery runbook defines RTO/RPO targets per severity level."
+    ],
+    "answer": "Run Get-InactiveUsers.ps1 with -InactiveDays 45; it queries Microsoft Graph for sign-in activity on enabled, licensed users and exports the stale accounts to a CSV.",
+    "ground_truth": "Use Get-InactiveUsers.ps1, which queries Graph's signInActivity for enabled licensed users and flags any account with no sign-in inside the given day threshold, exporting the results as CSV."
+  },
+  {
+    "question": "What does the Intune compliance report script flag as stale?",
+    "retrieved_doc_ids": ["automation-intune-compliance", "automation-remove-stale-devices"],
+    "relevant_doc_ids": ["automation-intune-compliance", "automation-remove-stale-devices"],
+    "retrieved_contexts": [
+      "Get-IntuneComplianceReport.ps1 flags devices whose LastSyncDateTime is older than -StaleCheckInDays, regardless of their reported compliance state.",
+      "Remove-StaleIntuneDevices.ps1 finds devices with no check-in for -StaleDays and can retire them, defaulting to a dry run."
+    ],
+    "answer": "It flags any device that hasn't synced with Intune within the configured StaleCheckInDays window, separately from whether the device reports as compliant.",
+    "ground_truth": "A device is flagged as stale when its last Intune sync is older than the StaleCheckInDays parameter, independent of its compliance state."
+  },
+  {
+    "question": "What's the recommended way to roll out a new Conditional Access policy?",
+    "retrieved_doc_ids": ["security-ca-baseline", "security-windows-hardening"],
+    "relevant_doc_ids": ["security-ca-baseline"],
+    "retrieved_contexts": [
+      "Ship every new Conditional Access policy in report-only mode first, run it for a full business cycle, review the sign-in logs, then move it to On.",
+      "BitLocker should be enabled on OS and data volumes with recovery keys escrowed to Entra ID or AD."
+    ],
+    "answer": "Deploy it in report-only mode first, monitor real sign-in logs for at least a full business cycle, then switch it to enforced.",
+    "ground_truth": "Enable the policy in report-only mode, observe sign-in log impact for a full business cycle including any monthly batch jobs, then promote it to On."
+  },
+  {
+    "question": "How are production and non-production environments isolated in the network architecture?",
+    "retrieved_doc_ids": ["infra-network-architecture", "infra-dr-runbook"],
+    "relevant_doc_ids": ["infra-network-architecture"],
+    "retrieved_contexts": [
+      "Production and non-production sit in separate spokes with separate address spaces, so a non-prod peering misconfiguration can't reach prod by accident.",
+      "The DR runbook's pre-incident checklist requires Conditional Access policies to be exported and version-controlled."
+    ],
+    "answer": "They're placed in separate spoke VNets with distinct address spaces, so peering mistakes in one spoke can't expose the other.",
+    "ground_truth": "Each environment gets its own spoke VNet with its own address space, isolating production from non-production at the network layer."
+  },
+  {
+    "question": "What temp password policy does the bulk provisioning script use?",
+    "retrieved_doc_ids": ["automation-bulk-provisioning", "automation-get-inactive-users"],
+    "relevant_doc_ids": ["automation-bulk-provisioning"],
+    "retrieved_contexts": [
+      "New-BulkUserProvisioning.ps1 generates a 16-character temporary password, forces a password change at next sign-in, and never writes the password to disk or the results log."
+    ],
+    "answer": "It generates a random 16-character temporary password per user and forces a change at next sign-in; the password is only shown once in the console, never logged.",
+    "ground_truth": "A 16-character randomly generated temporary password is assigned, with ForceChangePasswordNextSignIn set to true, and the password is never persisted to disk or the results CSV."
+  }
+]
